@@ -7,6 +7,7 @@ class Graph:
     def __init__(self):
         self.count = 0
         self.vertices = []
+        self.not_included = []
 
     def add(self, pos_x: int, pos_y: int, *connected_to: int):
         self.vertices.append(Vertex(pos_x, pos_y))
@@ -43,46 +44,21 @@ class Graph:
             vertex.colour = (255, 255, 255)
 
     def colour(self):
-        found = []
-        already_marked = [0 for i in range(self.count)]
-
-        for values in product((1, 0), repeat=self.count):
-
-            if self.is_subset(values, already_marked):
-                continue
-
-            f = 1
-            for st in range(self.count):
-                if not values[st]:
-                    continue
-                k = 1
-                for fi in self.vertices[st].connected_to:
-                    k = k and not values[fi]
-                    if not k:
-                        break
-                f = f and k
-                if not f:
-                    break
-
-            if f:
-                s_sets = found
-                for s_set in s_sets:
-                    if self.is_subset(s_set, values):
-                        found.remove(s_set)
-
-                found.append(values)
-                for (idx, val) in enumerate(values):
-                    already_marked[idx] = already_marked[idx] or val
-
         colours = list(colours_generator())
-        for (s_set, colour) in zip(found, colours):
-            for (idx, val) in enumerate(s_set):
-                if val:
-                    self.vertices[idx].colour = colour
+        for vertex in self.vertices:
+            vertex.colour = (255, 255, 255)
+        vertices = [vertex for vertex in self.vertices]
+        vertices.sort(key=lambda x: -len(x.connected_to))
 
-    @staticmethod
-    def is_subset(first, second):
-        for (l, r) in zip(first, second):
-            if (l == 1) and (r == 0):
-                return False
-        return True
+        for vertex in vertices:
+            colour_idx = 0
+            colours_to_skip = set()
+            for connected in vertex.connected_to:
+                if self.vertices[connected].colour != (255, 255, 255):
+                    if self.vertices[connected].colour == colours[colour_idx]:
+                        colour_idx += 1
+                        while colours[colour_idx] in colours_to_skip:
+                            colour_idx += 1
+                    else:
+                        colours_to_skip.add(self.vertices[connected].colour)
+            vertex.colour = colours[colour_idx]
