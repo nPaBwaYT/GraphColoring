@@ -47,10 +47,15 @@ class Graph:
         colours = list(colours_generator())
         for vertex in self.vertices:
             vertex.colour = (255, 255, 255)
-        vertices = [vertex for vertex in self.vertices]
-        vertices.sort(key=lambda x: -len(x.connected_to))
+        vertices_queue = [max(self.vertices, key=lambda x: len(x.connected_to)), ]
 
-        for vertex in vertices:
+        for i in range(self.count):
+            if len(vertices_queue) != 0:
+                vertex = vertices_queue.pop(0)
+            else:
+                vertex = max([vertex for vertex in self.vertices if vertex.colour == (255, 255, 255)],
+                             key=lambda x: len(x.connected_to))
+
             colour_idx = 0
             colours_to_skip = set()
             for connected in vertex.connected_to:
@@ -61,4 +66,13 @@ class Graph:
                             colour_idx += 1
                     else:
                         colours_to_skip.add(self.vertices[connected].colour)
+                else:
+                    for (idx, queued) in enumerate(vertices_queue):
+                        if len(self.vertices[connected].connected_to) > len(queued.connected_to):
+                            vertices_queue.insert(idx, self.vertices[connected])
+                            break
+                    else:
+                        vertices_queue.append(self.vertices[connected])
+                    self.vertices[connected].colour = (255, 255, 254)
+
             vertex.colour = colours[colour_idx]
